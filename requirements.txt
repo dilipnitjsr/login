@@ -1,3 +1,8 @@
 django
 gunicorn
 django-heroku
+kiteconnect
+numpy
+pandas
+psycopg2
+SQLAlchemy
