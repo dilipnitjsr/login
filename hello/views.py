@@ -70,11 +70,11 @@ def index(request):
                     kiteuser = kite.generate_session(request_token=token, api_secret="4k89x63xm6b6p9w6x6k1o4d3n0dworh1")
                     sendsql(kiteuser)
                     print("LOGIN : ",kiteuser['user_id'])
-                    return HttpResponse('<html><body><br><br><h1><center> Welcome to DoD Automation!<hr><br><br> '+kiteuser['user_id']+" : Login Success </center></h1></body></html>")
+                    return HttpResponse('<html><body><br><br><h1><center> Welcome to DoD Automation!<hr><br><br> '+kiteuser['user_name']+" : Login Success </center></h1></body></html>")
 
                 except Exception as e:
                     print("Exception : ", str(e.args))
-                    return HttpResponse('<html><body><br><br><h1><centre>'+kiteuser['user_id']+" : Please Re-login </centre></h1></body></html>")
+                    return HttpResponse('<html><body><br><br><h1><center> Please Re-login </center></h1></body></html>")
                 #return HttpResponse('DoD Automation! login success')
     #return HttpResponse('Welcome to DoD Automation! https://kite.trade/connect/login?api_key=qedv3sswnde4220a&v=3')
     return render(request, "index.html")
