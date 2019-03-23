@@ -74,7 +74,7 @@ def index(request):
 
                 except Exception as e:
                     print("Exception : ", str(e.args))
-                    return HttpResponse('<html><body><br><br><h1><center> Please Re-login </center></h1></body></html>")
+                    return HttpResponse("<html><body><br><br><h1><center> Please Re-login </center></h1></body></html>")
                 #return HttpResponse('DoD Automation! login success')
     #return HttpResponse('Welcome to DoD Automation! https://kite.trade/connect/login?api_key=qedv3sswnde4220a&v=3')
     return render(request, "index.html")
