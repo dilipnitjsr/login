@@ -21,7 +21,8 @@ Procfiles can contain additional process types. For example, you might declare o
 Microsoft Windows
 The sample app has an additional Procfile for local development on Microsoft Windows, located in the file Procfile.windows. Later tutorial steps will use this instead: it starts a different web server, one that is compatible with Windows.
 
-web: python manage.py runserver 0.0.0.0:5000
+web: python manage.py runserver 127.0.0.1:80
 
 pip install -r requirements.txt
 
+23-03-2019 : view.py modified for response of login
