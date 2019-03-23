@@ -70,7 +70,8 @@ def index(request):
                     kiteuser = kite.generate_session(request_token=token, api_secret="4k89x63xm6b6p9w6x6k1o4d3n0dworh1")
                     sendsql(kiteuser)
                     print("LOGIN : ",kiteuser['user_id'])
-                    return HttpResponse('DoD Automation! login success :'+kiteuser['user_id'])
+                    return HttpResponse('<html><body><br><br><h1> Welcome to DoD Automation!<br> login success :'+kiteuser['user_id']+"</h1></body></html>")
+
                 except Exception as e:
                     print("Exception : ", str(e.args))
                 #return HttpResponse('DoD Automation! login success')
