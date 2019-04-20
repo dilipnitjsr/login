@@ -5,13 +5,27 @@ WEb based login system
 from django.shortcuts import render
 from django.http import HttpResponse
 from kiteconnect import KiteConnect
+import psycopg2
+
+import telegram
+def sendBot(message,token,contact):
+    if contact==None:
+        print("Bot send contact id is None.")
+        return
+    try:
+            bot = telegram.Bot(token)
+            bot.send_message(chat_id=contact, text=message)
+            print ("Send : "+ contact)
+    except Exception as e:
+        print(e)
+        print ("Error : "+ contact)
 
 def kConnect(user_id,access_token,api_key="qedv3sswnde4220a",):
         kite = KiteConnect(api_key)
         kite.set_access_token(token)
         return kite
     
-import psycopg2
+
 def opendb():
     database='xyoqlexl'
     user='xyoqlexl'
@@ -70,7 +84,7 @@ def index(request):
                     kiteuser = kite.generate_session(request_token=token, api_secret="4k89x63xm6b6p9w6x6k1o4d3n0dworh1")
                     sendsql(kiteuser)
                     print("LOGIN : ",kiteuser['user_id'])
-                    dodlib.sendBot(kiteuser['user_name'] +" : LOGIN : "+ kiteuser['user_id'],token=config.token,contact=config.dodfno)
+                    sendBot(kiteuser['user_name'] +" : LOGIN : "+ kiteuser['user_id'],token=config.token,contact=config.dodfno)
                     return HttpResponse('<html><body><br><br><h1><center> Welcome to DoD Automation!<hr><br><br> '+kiteuser['user_name']+" : Login Success </center><br></h1><h4><a href='https://kite.trade/connect/login?api_key=qedv3sswnde4220a&v=3'> Another Login </a></h4></body></html>")
 
                 except Exception as e:
