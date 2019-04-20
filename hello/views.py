@@ -1,11 +1,18 @@
 '''
 date: 19-03-2019
+20-04-2018 : modified add sendBot()
 WEb based login system 
 '''
+
 from django.shortcuts import render
 from django.http import HttpResponse
 from kiteconnect import KiteConnect
 import psycopg2
+
+
+token ="471420613:AAEAePKy3Zz1cLw9gXHLCZupuvfS3xtzJq8" #BOT Dodtradebot Mr Dod Automation
+dodfno =  '529908821' # DoD DoDFnO private
+
 
 import telegram
 def sendBot(message,token,contact):
@@ -84,7 +91,7 @@ def index(request):
                     kiteuser = kite.generate_session(request_token=token, api_secret="4k89x63xm6b6p9w6x6k1o4d3n0dworh1")
                     sendsql(kiteuser)
                     print("LOGIN : ",kiteuser['user_id'])
-                    sendBot(kiteuser['user_name'] +" : LOGIN : "+ kiteuser['user_id'],token=config.token,contact=config.dodfno)
+                    sendBot(kiteuser['user_name'] +" : LOGIN : "+ kiteuser['user_id'],token=token,contact=dodfno)
                     return HttpResponse('<html><body><br><br><h1><center> Welcome to DoD Automation!<hr><br><br> '+kiteuser['user_name']+" : Login Success </center><br></h1><h4><a href='https://kite.trade/connect/login?api_key=qedv3sswnde4220a&v=3'> Another Login </a></h4></body></html>")
 
                 except Exception as e:
