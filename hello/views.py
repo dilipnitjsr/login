@@ -10,8 +10,8 @@ from kiteconnect import KiteConnect
 import psycopg2
 
 
-token ="471420613:AAEAePKy3Zz1cLw9gXHLCZupuvfS3xtzJq8" #BOT Dodtradebot Mr Dod Automation
-dodfno =  '529908821' # DoD DoDFnO private
+token ="471420613:AAEAePKy3Zz1cLw9gXHLCZupuvfS3xtzJq8" #BOT Dodtradebot :  DoD AI
+dodfno ='529908821' # DoD DoDFnO private
 
 
 import telegram
