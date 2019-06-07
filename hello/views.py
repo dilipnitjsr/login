@@ -9,11 +9,12 @@ from django.http import HttpResponse
 from kiteconnect import KiteConnect
 import psycopg2
 
-token ="471420613:AAEAePKy3Zz1cLw9gXHLCZupuvfS3xtzJq8" #BOT Dodtradebot Mr Dod Automation
+#token ="471420613:AAEAePKy3Zz1cLw9gXHLCZupuvfS3xtzJq8" #BOT Dodtradebot Mr Dod Automation
 
 token ="471420613:AAEAePKy3Zz1cLw9gXHLCZupuvfS3xtzJq8" #BOT Dodtradebot :  DoD AI
-dodfno ='529908821' # DoD DoDFnO private
+#dodfno ='529908821' # DoD DoDFnO private
 
+dodfno = '569816271'#Dr dilip's Dod AI  #'529908821' # DoD AI private
 
 import telegram
 def sendBot(message,token=token,contact=dodfno):
