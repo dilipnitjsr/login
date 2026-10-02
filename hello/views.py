@@ -1,110 +1,158 @@
 '''
-date: 19-03-2019
-20-04-2018 : modified add sendBot()
-WEb based login system 
+Web-based Kite Connect login callback.
+
+Secrets are loaded from environment variables. Do not hard-code API keys,
+database passwords, access tokens, or bot credentials in this module.
 '''
 
-from django.shortcuts import render
+import logging
+import os
+
 from django.http import HttpResponse
+from django.shortcuts import render
+from django.utils.html import format_html
 from kiteconnect import KiteConnect
 import psycopg2
-
-#token ="471420613:AAEAePKy3Zz1cLw9gXHLCZupuvfS3xtzJq8" #BOT Dodtradebot Mr Dod Automation
-
-token ="471420613:AAEAePKy3Zz1cLw9gXHLCZupuvfS3xtzJq8" #BOT Dodtradebot :  DoD AI
-#dodfno ='529908821' # DoD DoDFnO private
-
-dodfno = '569816271'#Dr dilip's Dod AI  #'529908821' # DoD AI private
-
 import telegram
-def sendBot(message,token=token,contact=dodfno):
-    if contact==None:
-        print("Bot send contact id is None.")
-        return
-    try:
-            bot = telegram.Bot(token)
-            bot.send_message(chat_id=contact, text=message)
-            print ("Send : "+ contact)
-    except Exception as e:
-        print(e)
-        print ("Error : "+ contact)
 
-def kConnect(user_id,access_token,api_key="qedv3sswnde4220a",):
-        kite = KiteConnect(api_key)
-        kite.set_access_token(token)
-        return kite
-    
+logger = logging.getLogger(__name__)
+
+
+def _required_env(name):
+    value = os.environ.get(name)
+    if not value:
+        raise RuntimeError("Required environment variable {} is not set".format(name))
+    return value
+
+
+def _kite_client(api_key=None):
+    return KiteConnect(api_key=api_key or _required_env("KITE_API_KEY"))
+
+
+def _kite_login_url():
+    return _kite_client().login_url()
+
+
+def sendBot(message, token=None, contact=None):
+    """Send an optional Telegram login notification."""
+    token = token or os.environ.get("TELEGRAM_BOT_TOKEN")
+    contact = contact or os.environ.get("TELEGRAM_CHAT_ID")
+
+    if not token or not contact:
+        logger.info("Telegram notification skipped: credentials are not configured")
+        return
+
+    try:
+        bot = telegram.Bot(token)
+        bot.send_message(chat_id=contact, text=message)
+    except Exception:
+        logger.exception("Unable to send Telegram login notification")
+
+
+def kConnect(user_id, access_token, api_key=None):
+    """Return a Kite client authenticated with the supplied access token."""
+    del user_id  # retained for backwards-compatible function signature
+    kite = _kite_client(api_key=api_key)
+    kite.set_access_token(access_token)
+    return kite
+
 
 def opendb():
-    database='xyoqlexl'
-    user='xyoqlexl'
-    password='t9keRD3SZWQTValdWjDleaSlP4ASLR23'
-    host='stampy.db.elephantsql.com'
-    port=5432        
-    conn=False
-    conn = psycopg2.connect(database=database, user=user, password=password, host=host, port=port)
-    return conn
-
+    """Open the database used to store the current Kite access token."""
+    return psycopg2.connect(
+        database=_required_env("DB_NAME"),
+        user=_required_env("DB_USER"),
+        password=_required_env("DB_PASSWORD"),
+        host=_required_env("DB_HOST"),
+        port=int(os.environ.get("DB_PORT", "5432")),
+    )
 
 
 def sendsql(kiteuser):
-
-        """
-        Open new connection
-        """
-        conn = 0
-        try:
-
-            #print("Sending Token to Database ...")
-            
-            conn = opendb()
-            
-            cur = conn.cursor()
-            cur.execute("UPDATE userKite SET  token = '%s' WHERE id = '%s';" %(kiteuser["access_token"], kiteuser['user_id'] ))
-            #cur.execute("INSERT INTO userKite (id, token) VALUES ('%s', '%s');" %(kiteuser['user_id'], kiteuser["access_token"]))
-            conn.commit()
-            cur.close()
-            print("UPDATED : "+kiteuser["access_token"])
+    """Persist the current Kite access token for the authenticated user."""
+    conn = None
+    try:
+        conn = opendb()
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE userKite SET token = %s WHERE id = %s",
+                (kiteuser["access_token"], kiteuser["user_id"]),
+            )
+        conn.commit()
+        logger.info("Updated Kite access token for user_id=%s", kiteuser["user_id"])
+        return True
+    except psycopg2.DatabaseError:
+        if conn:
+            conn.rollback()
+        logger.exception("Unable to update Kite access token")
+        return False
+    finally:
+        if conn:
             conn.close()
-            return True
-        except psycopg2.DatabaseError as e:
-            if conn:
-                conn.rollback()
-                print ('Error : %s' % e)
-                #print("Connection closed.")
-                conn.close()
-            print ('Error : %s' % e)
-            return False
 
 
-
-
-
-# Create your views here.
 def index(request):
-    if request.method == "GET":
-    	#print(request.GET["id"])
-    	token=request.GET.get("request_token")
-    	print("Hello GET :",token)
-    	print("Status :",request.GET.get("status"))
-    	if request.GET.get("status") == "success":
-                try :
-                    kite = KiteConnect("qedv3sswnde4220a")
-                    kiteuser = kite.generate_session(request_token=token, api_secret="4k89x63xm6b6p9w6x6k1o4d3n0dworh1")
-                    sendsql(kiteuser)
-                    print("LOGIN : ",kiteuser['user_id'])
-                    sendBot(str(kiteuser['user_name']) +" : LOGIN : "+ str(kiteuser['user_id']))
-                    return HttpResponse('<html><body><br><br><h1><center> Welcome to DoD Automation!<hr><br><br> '+kiteuser['user_name']+" : Login Success </center><br></h1><h4><a href='https://kite.trade/connect/login?api_key=qedv3sswnde4220a&v=3'> Another Login </a></h4></body></html>")
+    login_url = None
+    try:
+        login_url = _kite_login_url()
+    except RuntimeError:
+        logger.error("Kite login is unavailable because server credentials are missing")
 
-                except Exception as e:
-                    print("Exception : ", str(e.args))
-                    return HttpResponse("<html><body><br><br><h1><center><a href='https://kite.trade/connect/login?api_key=qedv3sswnde4220a&v=3'> Please Re-login </a></center></h1></body></html>")
-                #return HttpResponse('DoD Automation! login success')
-    #return HttpResponse('Welcome to DoD Automation! https://kite.trade/connect/login?api_key=qedv3sswnde4220a&v=3')
-    return render(request, "index.html")
+    if request.method == "GET":
+        request_token = request.GET.get("request_token")
+        status = request.GET.get("status")
+
+        # Never log the request token itself.
+        logger.info(
+            "Kite callback received: status=%s request_token_present=%s",
+            status,
+            bool(request_token),
+        )
+
+        if status == "success":
+            if not request_token:
+                return HttpResponse("Missing request_token", status=400)
+
+            try:
+                kite = _kite_client()
+                kiteuser = kite.generate_session(
+                    request_token=request_token,
+                    api_secret=_required_env("KITE_API_SECRET"),
+                )
+
+                if not sendsql(kiteuser):
+                    raise RuntimeError("Access token could not be persisted")
+
+                user_id = kiteuser.get("user_id", "")
+                user_name = kiteuser.get("user_name", "User")
+                logger.info("Kite login successful for user_id=%s", user_id)
+                sendBot("{} : LOGIN : {}".format(user_name, user_id))
+
+                return HttpResponse(
+                    format_html(
+                        "<html><body><br><br><h1><center>"
+                        "Welcome to DoD Automation!<hr><br><br>{} : Login Success"
+                        "</center><br></h1><h4><a href='{}'>Another Login</a>"
+                        "</h4></body></html>",
+                        user_name,
+                        login_url or "/",
+                    )
+                )
+            except Exception:
+                # Do not expose provider/database exception details or tokens to the browser.
+                logger.exception("Kite login failed")
+                return HttpResponse(
+                    format_html(
+                        "<html><body><br><br><h1><center>"
+                        "<a href='{}'>Please Re-login</a>"
+                        "</center></h1></body></html>",
+                        login_url or "/",
+                    ),
+                    status=401,
+                )
+
+    return render(request, "index.html", {"kite_login_url": login_url})
 
 
 def db(request):
-	
-	return render(request, "index.html")
-	#return HttpResponse('Welcome to DoD Automation!')
+    return render(request, "index.html", {"kite_login_url": None})
