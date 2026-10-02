@@ -1,37 +1,33 @@
 <html>
 <head>
-<title>Login to DoD</title>
-  
+    <title>Login to DoD</title>
 </head>
 <body>
-</body>
 <center>
-<h1>
-	<br>
-	<hr>
-	<hr>
-   		Welcome to DoD Automation
-	<hr>
-	<br>
-	<br>
-	<br>
-</h1>
-<h4>
-	Please registered with us for trading automation system solution.
-	<br>
-	<br>
-	For More details and system registrations, <br>
-	<br>
-	contact to dodfno@gmail.com / @dodfno at Telegram.
-	<br>
-</h4>
-<h3>
-	<br>
-
-   	<a href="https://kite.trade/connect/login?api_key=qedv3sswnde4220a&v=3">Login with DoD Automations</a>
-</h3>
-
+    <h1>
+        <br>
+        <hr>
+        <hr>
+        Welcome to DoD Automation
+        <hr>
+        <br><br><br>
+    </h1>
+    <h4>
+        Please register with us for the trading automation system solution.
+        <br><br>
+        For more details and system registrations,
+        <br><br>
+        contact dodfno@gmail.com / @dodfno on Telegram.
+        <br>
+    </h4>
+    <h3>
+        <br>
+        {% if kite_login_url %}
+            <a href="{{ kite_login_url }}">Login with DoD Automations</a>
+        {% else %}
+            Login is temporarily unavailable because server credentials are not configured.
+        {% endif %}
+    </h3>
 </center>
-</html>
 </body>
 </html>
